@@ -15,31 +15,30 @@
  */
 package com.example.android.architecture.blueprints.todoapp.data.source.local
 
+import android.arch.persistence.room.Room
 import android.support.test.InstrumentationRegistry
 import android.support.test.filters.LargeTest
 import android.support.test.runner.AndroidJUnit4
 import com.example.android.architecture.blueprints.todoapp.data.Task
+import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
+import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.core.Is.`is`
 import org.junit.After
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertThat
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
-import java.util.LinkedList
-import android.arch.persistence.room.Room
-import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
 
 /**
  * Integration test for the [TasksDataSource].
  */
-@RunWith(AndroidJUnit4::class) @LargeTest class TasksLocalDataSourceTest {
+@RunWith(AndroidJUnit4::class)
+@LargeTest
+class TasksLocalDataSourceTest {
 
     private val TITLE = "title"
     private val TITLE2 = "title2"
@@ -66,11 +65,13 @@ import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
         TasksLocalDataSource.clearInstance()
     }
 
-    @Test fun testPreConditions() {
+    @Test
+    fun testPreConditions() {
         assertNotNull(localDataSource)
     }
 
-    @Test fun saveTask_retrievesTask() {
+    @Test
+    fun saveTask_retrievesTask() = runBlocking {
         // Given a new task
         val newTask = Task(TITLE)
 
@@ -79,19 +80,16 @@ import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
             saveTask(newTask)
 
             // Then the task can be retrieved from the persistent repository
-            getTask(newTask.id, object : TasksDataSource.GetTaskCallback {
-                override fun onTaskLoaded(task: Task) {
-                    assertThat(task, `is`(newTask))
-                }
-
-                override fun onDataNotAvailable() {
-                    fail("Callback error")
-                }
-            })
+            val result = getTask(newTask.id)
+            assertThat(result, instanceOf(Result.Success::class.java))
+            if (result is Result.Success) {
+                assertThat(result.data, `is`(newTask))
+            }
         }
     }
 
-    @Test fun completeTask_retrievedTaskIsComplete() {
+    @Test
+    fun completeTask_retrievedTaskIsComplete() = runBlocking {
         // Given a new task in the persistent repository
         val newTask = Task(TITLE)
         localDataSource.saveTask(newTask)
@@ -100,23 +98,17 @@ import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
         localDataSource.completeTask(newTask)
 
         // Then the task can be retrieved from the persistent repository and is complete
-        localDataSource.getTask(newTask.id, object : TasksDataSource.GetTaskCallback {
-            override fun onTaskLoaded(task: Task) {
-                assertThat(task, `is`(newTask))
-                assertThat(task.isCompleted, `is`(true))
-            }
+        val result = localDataSource.getTask(newTask.id)
+        assertThat(result, instanceOf(Result.Success::class.java))
+        if (result is Result.Success) {
+            assertThat(result.data, `is`(newTask))
+            assertThat(result.data.isCompleted, `is`(true))
+        }
 
-            override fun onDataNotAvailable() {
-                fail("Callback error")
-            }
-        })
     }
 
     @Test
-    fun activateTask_retrievedTaskIsActive() {
-        // Initialize mock for the callback.
-        val callback = mock(TasksDataSource.GetTaskCallback::class.java)
-
+    fun activateTask_retrievedTaskIsActive() = runBlocking {
         // Given a new completed task in the persistent repository
         val newTask = Task(TITLE)
         with(localDataSource) {
@@ -127,20 +119,15 @@ import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
             activateTask(newTask)
 
             // Then the task can be retrieved from the persistent repository and is active
-            getTask(newTask.id, callback)
+            val task = getTask(newTask.id)
+            assertNotEquals(null, task)
         }
-        verify(callback, never()).onDataNotAvailable()
-        verify(callback).onTaskLoaded(newTask)
 
         assertThat(newTask.isCompleted, `is`(false))
     }
 
-    @Test fun clearCompletedTask_taskNotRetrievable() {
-        // Initialize mocks for the callbacks.
-        val callback1 = mock(TasksDataSource.GetTaskCallback::class.java)
-        val callback2 = mock(TasksDataSource.GetTaskCallback::class.java)
-        val callback3 = mock(TasksDataSource.GetTaskCallback::class.java)
-
+    @Test
+    fun clearCompletedTask_taskNotRetrievable() = runBlocking {
         // Given 2 new completed tasks and 1 active task in the persistent repository
         val newTask1 = Task(TITLE)
         val newTask2 = Task(TITLE2)
@@ -156,41 +143,37 @@ import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
             clearCompletedTasks()
 
             // Then the completed tasks cannot be retrieved and the active one can
-            getTask(newTask1.id, callback1)
+            val result1 = getTask(newTask1.id)
+            assertThat(result1, instanceOf(Result.Error::class.java))
 
-            verify(callback1).onDataNotAvailable()
-            verify(callback1, never()).onTaskLoaded(newTask1)
+            val result2 = getTask(newTask2.id)
+            assertThat(result2, instanceOf(Result.Error::class.java))
 
-            getTask(newTask2.id, callback2)
-
-            verify(callback2).onDataNotAvailable()
-            verify(callback2, never()).onTaskLoaded(newTask1)
-
-            getTask(newTask3.id, callback3)
-
-            verify(callback3, never()).onDataNotAvailable()
-            verify(callback3).onTaskLoaded(newTask3)
+            val result3 = getTask(newTask3.id)
+            assertThat(result3, instanceOf(Result.Success::class.java))
+            if (result3 is Result.Success) {
+                assertThat(result3.data, `is`(newTask3))
+            }
         }
     }
 
-    @Test fun deleteAllTasks_emptyListOfRetrievedTask() {
+    @Test
+    fun deleteAllTasks_emptyListOfRetrievedTask() = runBlocking {
         with(localDataSource) {
             // Given a new task in the persistent repository and a mocked callback
             saveTask(Task(TITLE))
-            val callback = mock(TasksDataSource.LoadTasksCallback::class.java)
 
             // When all tasks are deleted
             deleteAllTasks()
 
             // Then the retrieved tasks is an empty list
-            getTasks(callback)
-
-            verify(callback).onDataNotAvailable()
-            verify(callback, never()).onTasksLoaded(LinkedList<Task>())
+            val result = getTasks()
+            assertThat(result, instanceOf(Result.Error::class.java))
         }
     }
 
-    @Test fun getTasks_retrieveSavedTasks() {
+    @Test
+    fun getTasks_retrieveSavedTasks() = runBlocking {
         with(localDataSource) {
             // Given 2 new tasks in the persistent repository
             val newTask1 = Task(TITLE)
@@ -199,29 +182,25 @@ import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
             saveTask(newTask2)
 
             // Then the tasks can be retrieved from the persistent repository
-            getTasks(object : TasksDataSource.LoadTasksCallback {
-                override fun onTasksLoaded(tasks: List<Task>) {
-                    assertNotNull(tasks)
-                    assertTrue(tasks.size >= 2)
+            val result = getTasks()
+            assertThat(result, CoreMatchers.instanceOf(Result.Success::class.java))
+            if (result is Result.Success) {
+                assertNotNull(result.data)
+                assertTrue(result.data.size >= 2)
 
-                    var newTask1IdFound = false
-                    var newTask2IdFound = false
-                    for (task in tasks) {
-                        if (task.id == newTask1.id) {
-                            newTask1IdFound = true
-                        }
-                        if (task.id == newTask2.id) {
-                            newTask2IdFound = true
-                        }
+                var newTask1IdFound = false
+                var newTask2IdFound = false
+                for (task in result.data) {
+                    if (task.id == newTask1.id) {
+                        newTask1IdFound = true
                     }
-                    assertTrue(newTask1IdFound)
-                    assertTrue(newTask2IdFound)
+                    if (task.id == newTask2.id) {
+                        newTask2IdFound = true
+                    }
                 }
-
-                override fun onDataNotAvailable() {
-                    fail()
-                }
-            })
+                assertTrue(newTask1IdFound)
+                assertTrue(newTask2IdFound)
+            }
         }
     }
 }

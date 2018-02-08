@@ -19,32 +19,21 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.InstrumentationRegistry.getTargetContext
 import android.support.test.espresso.Espresso.onView
 import android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
-import android.support.test.espresso.action.ViewActions.click
-import android.support.test.espresso.action.ViewActions.closeSoftKeyboard
-import android.support.test.espresso.action.ViewActions.replaceText
-import android.support.test.espresso.action.ViewActions.typeText
+import android.support.test.espresso.action.ViewActions.*
 import android.support.test.espresso.assertion.ViewAssertions.doesNotExist
 import android.support.test.espresso.assertion.ViewAssertions.matches
-import android.support.test.espresso.matcher.ViewMatchers.hasSibling
-import android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom
-import android.support.test.espresso.matcher.ViewMatchers.isChecked
-import android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA
-import android.support.test.espresso.matcher.ViewMatchers.isDisplayed
-import android.support.test.espresso.matcher.ViewMatchers.withContentDescription
-import android.support.test.espresso.matcher.ViewMatchers.withId
-import android.support.test.espresso.matcher.ViewMatchers.withText
+import android.support.test.espresso.core.internal.deps.guava.base.Preconditions.checkArgument
+import android.support.test.espresso.matcher.ViewMatchers.*
 import android.support.test.filters.LargeTest
 import android.support.test.filters.SdkSuppress
 import android.support.test.rule.ActivityTestRule
 import android.support.test.runner.AndroidJUnit4
-import android.text.TextUtils
 import android.view.View
 import android.widget.ListView
 import com.example.android.architecture.blueprints.todoapp.Injection
 import com.example.android.architecture.blueprints.todoapp.R
 import com.example.android.architecture.blueprints.todoapp.TestUtils
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
-import com.google.common.base.Preconditions.checkArgument
+import com.example.android.architecture.blueprints.todoapp.util.runBlocking
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
@@ -57,7 +46,9 @@ import org.junit.runner.RunWith
 /**
  * Tests for the tasks screen, the main screen which contains a list of all tasks.
  */
-@RunWith(AndroidJUnit4::class) @LargeTest class TasksScreenTest {
+@RunWith(AndroidJUnit4::class)
+@LargeTest
+class TasksScreenTest {
 
     private val TITLE1 = "TITLE1"
     private val DESCRIPTION = "DESCR"
@@ -70,14 +61,16 @@ import org.junit.runner.RunWith
      * Rules are interceptors which are executed for each test method and are important building
      * blocks of Junit tests.
      */
-    @Rule @JvmField var tasksActivityTestRule = object :
+    @Rule
+    @JvmField
+    var tasksActivityTestRule = object :
             ActivityTestRule<TasksActivity>(TasksActivity::class.java) {
 
         /**
          * To avoid a long list of tasks and the need to scroll through the list to find a
          * task, we call [TasksDataSource.deleteAllTasks] before each test.
          */
-        override fun beforeActivityLaunched() {
+        override fun beforeActivityLaunched() = runBlocking {
             super.beforeActivityLaunched()
             // Doing this in @Before generates a race condition.
             Injection.provideTasksRepository(InstrumentationRegistry.getTargetContext())
@@ -112,7 +105,8 @@ import org.junit.runner.RunWith
         }
     }
 
-    @Test fun clickAddTaskButton_opensAddTaskUi() {
+    @Test
+    fun clickAddTaskButton_opensAddTaskUi() {
         // Click on the add task button
         onView(withId(R.id.fab_add_task)).perform(click())
 
@@ -120,7 +114,8 @@ import org.junit.runner.RunWith
         onView(withId(R.id.add_task_title)).check(matches(isDisplayed()))
     }
 
-    @Test fun editTask() {
+    @Test
+    fun editTask() {
         // First add a task
         createTask(TITLE1, DESCRIPTION)
 
@@ -149,14 +144,16 @@ import org.junit.runner.RunWith
         onView(withItemText(TITLE1)).check(doesNotExist())
     }
 
-    @Test fun addTaskToTasksList() {
+    @Test
+    fun addTaskToTasksList() {
         createTask(TITLE1, DESCRIPTION)
 
         // Verify task is displayed on screen
         onView(withItemText(TITLE1)).check(matches(isDisplayed()))
     }
 
-    @Test fun markTaskAsComplete() {
+    @Test
+    fun markTaskAsComplete() {
         viewAllTasks()
 
         // Add active task
@@ -174,7 +171,8 @@ import org.junit.runner.RunWith
         onView(withItemText(TITLE1)).check(matches(isDisplayed()))
     }
 
-    @Test fun markTaskAsActive() {
+    @Test
+    fun markTaskAsActive() {
         viewAllTasks()
 
         // Add completed task
@@ -193,7 +191,8 @@ import org.junit.runner.RunWith
         onView(withItemText(TITLE1)).check(matches(not(isDisplayed())))
     }
 
-    @Test fun showAllTasks() {
+    @Test
+    fun showAllTasks() {
         // Add 2 active tasks
         createTask(TITLE1, DESCRIPTION)
         createTask(TITLE2, DESCRIPTION)
@@ -204,7 +203,8 @@ import org.junit.runner.RunWith
         onView(withItemText(TITLE2)).check(matches(isDisplayed()))
     }
 
-    @Test fun showActiveTasks() {
+    @Test
+    fun showActiveTasks() {
         // Add 2 active tasks
         createTask(TITLE1, DESCRIPTION)
         createTask(TITLE2, DESCRIPTION)
@@ -215,7 +215,8 @@ import org.junit.runner.RunWith
         onView(withItemText(TITLE2)).check(matches(isDisplayed()))
     }
 
-    @Test fun showCompletedTasks() {
+    @Test
+    fun showCompletedTasks() {
         // Add 2 completed tasks
         createTask(TITLE1, DESCRIPTION)
         clickCheckBoxForTask(TITLE1)
@@ -228,7 +229,8 @@ import org.junit.runner.RunWith
         onView(withItemText(TITLE2)).check(matches(isDisplayed()))
     }
 
-    @Test fun clearCompletedTasks() {
+    @Test
+    fun clearCompletedTasks() {
         viewAllTasks()
 
         // Add 2 complete tasks
@@ -246,7 +248,8 @@ import org.junit.runner.RunWith
         onView(withItemText(TITLE2)).check(matches(not(isDisplayed())))
     }
 
-    @Test fun createOneTask_deleteTask() {
+    @Test
+    fun createOneTask_deleteTask() {
         viewAllTasks()
 
         // Add active task
@@ -263,7 +266,8 @@ import org.junit.runner.RunWith
         onView(withText(TITLE1)).check(matches(not(isDisplayed())))
     }
 
-    @Test fun createTwoTasks_deleteOneTask() {
+    @Test
+    fun createTwoTasks_deleteOneTask() {
         // Add 2 active tasks
         createTask(TITLE1, DESCRIPTION)
         createTask(TITLE2, DESCRIPTION)
@@ -280,7 +284,8 @@ import org.junit.runner.RunWith
         onView(withText(TITLE2)).check(doesNotExist())
     }
 
-    @Test fun markTaskAsCompleteOnDetailScreen_taskIsCompleteInList() {
+    @Test
+    fun markTaskAsCompleteOnDetailScreen_taskIsCompleteInList() {
         viewAllTasks()
 
         // Add 1 active task
@@ -300,7 +305,8 @@ import org.junit.runner.RunWith
                 hasSibling(withText(TITLE1)))).check(matches(isChecked()))
     }
 
-    @Test fun markTaskAsActiveOnDetailScreen_taskIsActiveInList() {
+    @Test
+    fun markTaskAsActiveOnDetailScreen_taskIsActiveInList() {
         viewAllTasks()
 
         // Add 1 completed task
@@ -321,7 +327,8 @@ import org.junit.runner.RunWith
                 hasSibling(withText(TITLE1)))).check(matches(not(isChecked())))
     }
 
-    @Test fun markTaskAsAcompleteAndActiveOnDetailScreen_taskIsActiveInList() {
+    @Test
+    fun markTaskAsAcompleteAndActiveOnDetailScreen_taskIsActiveInList() {
         viewAllTasks()
 
         // Add 1 active task
@@ -344,7 +351,8 @@ import org.junit.runner.RunWith
                 hasSibling(withText(TITLE1)))).check(matches(not(isChecked())))
     }
 
-    @Test fun markTaskAsActiveAndCompleteOnDetailScreen_taskIsCompleteInList() {
+    @Test
+    fun markTaskAsActiveAndCompleteOnDetailScreen_taskIsCompleteInList() {
         viewAllTasks()
 
         // Add 1 completed task
@@ -368,7 +376,8 @@ import org.junit.runner.RunWith
                 hasSibling(withText(TITLE1)))).check(matches(isChecked()))
     }
 
-    @Test fun orientationChange_FilterActivePersists() {
+    @Test
+    fun orientationChange_FilterActivePersists() {
 
         // Add a completed task
         createTask(TITLE1, DESCRIPTION)
@@ -387,7 +396,8 @@ import org.junit.runner.RunWith
         onView(withText(TITLE1)).check(doesNotExist())
     }
 
-    @Test fun orientationChange_FilterCompletedPersists() {
+    @Test
+    fun orientationChange_FilterCompletedPersists() {
 
         // Add a completed task
         createTask(TITLE1, DESCRIPTION)
@@ -408,7 +418,9 @@ import org.junit.runner.RunWith
     }
 
     // Blinking cursor after rotation breaks this in API 19
-    @Test @SdkSuppress(minSdkVersion = 21) fun orientationChange_DuringEdit_ChangePersists() {
+    @Test
+    @SdkSuppress(minSdkVersion = 21)
+    fun orientationChange_DuringEdit_ChangePersists() {
         // Add a completed task
         createTask(TITLE1, DESCRIPTION)
 
@@ -430,7 +442,9 @@ import org.junit.runner.RunWith
     }
 
     // Blinking cursor after rotation breaks this in API 19
-    @Test @SdkSuppress(minSdkVersion = 21) fun orientationChange_DuringEdit_NoDuplicate() {
+    @Test
+    @SdkSuppress(minSdkVersion = 21)
+    fun orientationChange_DuringEdit_NoDuplicate() {
         // Add a completed task
         createTask(TITLE1, DESCRIPTION)
 
