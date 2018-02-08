@@ -35,7 +35,7 @@ fun <T> eq(obj: T): T = Mockito.eq<T>(obj)
  * Returns Mockito.any() as nullable type to avoid java.lang.IllegalStateException when
  * null is returned.
  */
-fun <T> any(): T = Mockito.any<T>()
+fun <T> anyMockito(): T = Mockito.any<T>()
 
 
 /**

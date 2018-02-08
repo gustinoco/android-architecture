@@ -15,20 +15,16 @@
  */
 package com.example.android.architecture.blueprints.todoapp.taskdetail
 
-import com.example.android.architecture.blueprints.todoapp.capture
 import com.example.android.architecture.blueprints.todoapp.data.Task
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
+import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
 import com.example.android.architecture.blueprints.todoapp.eq
+import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import kotlinx.coroutines.experimental.Unconfined
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.inOrder
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
 
 /**
@@ -50,16 +46,10 @@ class TaskDetailPresenterTest {
 
     @Mock private lateinit var taskDetailView: TaskDetailContract.View
 
-    /**
-     * [ArgumentCaptor] is a powerful Mockito API to capture argument values and use them to
-     * perform further actions or assertions on them.
-     */
-    @Captor private lateinit var getTaskCallbackCaptor:
-            ArgumentCaptor<TasksDataSource.GetTaskCallback>
-
     private lateinit var taskDetailPresenter: TaskDetailPresenter
 
-    @Before fun setup() {
+    @Before
+    fun setup() {
         // Mockito has a very convenient way to inject mocks by using the @Mock annotation. To
         // inject the mocks in the test the initMocks method needs to be called.
         MockitoAnnotations.initMocks(this)
@@ -68,28 +58,29 @@ class TaskDetailPresenterTest {
         `when`(taskDetailView.isActive).thenReturn(true)
     }
 
-    @Test fun createPresenter_setsThePresenterToView() {
+    @Test
+    fun createPresenter_setsThePresenterToView() {
         // Get a reference to the class under test
         taskDetailPresenter = TaskDetailPresenter(
-                ACTIVE_TASK.id, tasksRepository, taskDetailView)
+                ACTIVE_TASK.id, tasksRepository, taskDetailView, Unconfined)
 
         // Then the presenter is set to the view
         verify(taskDetailView).presenter = taskDetailPresenter
     }
 
-    @Test fun getActiveTaskFromRepositoryAndLoadIntoView() {
+    @Test
+    fun getActiveTaskFromRepositoryAndLoadIntoView() = runBlocking {
+        // When task is loaded
+        `when`(tasksRepository.getTask(ACTIVE_TASK.id)).thenReturn(Result.Success(ACTIVE_TASK))
+
         // When tasks presenter is asked to open a task
         taskDetailPresenter = TaskDetailPresenter(
-                ACTIVE_TASK.id, tasksRepository, taskDetailView).apply { start() }
+                ACTIVE_TASK.id, tasksRepository, taskDetailView, Unconfined).apply { start() }
 
         // Then task is loaded from model, callback is captured and progress indicator is shown
-        verify(tasksRepository).getTask(eq(ACTIVE_TASK.id),
-                capture(getTaskCallbackCaptor))
+        verify(tasksRepository).getTask(eq(ACTIVE_TASK.id))
         val inOrder = inOrder(taskDetailView)
         inOrder.verify(taskDetailView).setLoadingIndicator(true)
-
-        // When task is finally loaded
-        getTaskCallbackCaptor.value.onTaskLoaded(ACTIVE_TASK) // Trigger callback
 
         // Then progress indicator is hidden and title, description and completion status are shown
         // in UI
@@ -99,18 +90,18 @@ class TaskDetailPresenterTest {
         verify(taskDetailView).showCompletionStatus(false)
     }
 
-    @Test fun getCompletedTaskFromRepositoryAndLoadIntoView() {
+    @Test
+    fun getCompletedTaskFromRepositoryAndLoadIntoView() = runBlocking {
+        // When task is loaded
+        `when`(tasksRepository.getTask(COMPLETED_TASK.id)).thenReturn(Result.Success(COMPLETED_TASK))
+
         taskDetailPresenter = TaskDetailPresenter(
-                COMPLETED_TASK.id, tasksRepository, taskDetailView).apply { start() }
+                COMPLETED_TASK.id, tasksRepository, taskDetailView, Unconfined).apply { start() }
 
         // Then task is loaded from model, callback is captured and progress indicator is shown
-        verify(tasksRepository).getTask(
-                eq(COMPLETED_TASK.id), capture(getTaskCallbackCaptor))
+        verify(tasksRepository).getTask(eq(COMPLETED_TASK.id))
         val inOrder = inOrder(taskDetailView)
         inOrder.verify(taskDetailView).setLoadingIndicator(true)
-
-        // When task is finally loaded
-        getTaskCallbackCaptor.value.onTaskLoaded(COMPLETED_TASK) // Trigger callback
 
         // Then progress indicator is hidden and title, description and completion status are shown
         // in UI
@@ -120,31 +111,34 @@ class TaskDetailPresenterTest {
         verify(taskDetailView).showCompletionStatus(true)
     }
 
-    @Test fun getUnknownTaskFromRepositoryAndLoadIntoView() {
+    @Test
+    fun getUnknownTaskFromRepositoryAndLoadIntoView() {
         // When loading of a task is requested with an invalid task ID.
         taskDetailPresenter = TaskDetailPresenter(
-                INVALID_TASK_ID, tasksRepository, taskDetailView).apply { start() }
+                INVALID_TASK_ID, tasksRepository, taskDetailView, Unconfined).apply { start() }
         verify(taskDetailView).showMissingTask()
     }
 
-    @Test fun deleteTask() {
+    @Test
+    fun deleteTask() = runBlocking {
         // Given an initialized TaskDetailPresenter with stubbed task
         val task = Task(TITLE_TEST, DESCRIPTION_TEST)
 
         // When the deletion of a task is requested
         taskDetailPresenter = TaskDetailPresenter(
-                task.id, tasksRepository, taskDetailView).apply { deleteTask() }
+                task.id, tasksRepository, taskDetailView, Unconfined).apply { deleteTask() }
 
         // Then the repository and the view are notified
         verify(tasksRepository).deleteTask(task.id)
         verify(taskDetailView).showTaskDeleted()
     }
 
-    @Test fun completeTask() {
+    @Test
+    fun completeTask() = runBlocking {
         // Given an initialized presenter with an active task
         val task = Task(TITLE_TEST, DESCRIPTION_TEST)
         taskDetailPresenter = TaskDetailPresenter(
-                task.id, tasksRepository, taskDetailView).apply {
+                task.id, tasksRepository, taskDetailView, Unconfined).apply {
             start()
             completeTask()
         }
@@ -154,11 +148,12 @@ class TaskDetailPresenterTest {
         verify(taskDetailView).showTaskMarkedComplete()
     }
 
-    @Test fun activateTask() {
+    @Test
+    fun activateTask() = runBlocking {
         // Given an initialized presenter with a completed task
         val task = Task(TITLE_TEST, DESCRIPTION_TEST).apply { isCompleted = true }
         taskDetailPresenter = TaskDetailPresenter(
-                task.id, tasksRepository, taskDetailView).apply {
+                task.id, tasksRepository, taskDetailView, Unconfined).apply {
             start()
             activateTask()
         }
@@ -168,19 +163,21 @@ class TaskDetailPresenterTest {
         verify(taskDetailView).showTaskMarkedActive()
     }
 
-    @Test fun activeTaskIsShownWhenEditing() {
+    @Test
+    fun activeTaskIsShownWhenEditing() {
         // When the edit of an ACTIVE_TASK is requested
         taskDetailPresenter = TaskDetailPresenter(
-                ACTIVE_TASK.id, tasksRepository, taskDetailView).apply { editTask() }
+                ACTIVE_TASK.id, tasksRepository, taskDetailView, Unconfined).apply { editTask() }
 
         // Then the view is notified
         verify(taskDetailView).showEditTask(ACTIVE_TASK.id)
     }
 
-    @Test fun invalidTaskIsNotShownWhenEditing() {
+    @Test
+    fun invalidTaskIsNotShownWhenEditing() {
         // When the edit of an invalid task id is requested
         taskDetailPresenter = TaskDetailPresenter(
-                INVALID_TASK_ID, tasksRepository, taskDetailView).apply { editTask() }
+                INVALID_TASK_ID, tasksRepository, taskDetailView, Unconfined).apply { editTask() }
 
         // Then the edit mode is never started
         verify(taskDetailView, never()).showEditTask(INVALID_TASK_ID)
