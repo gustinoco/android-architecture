@@ -16,8 +16,11 @@
 package com.example.android.architecture.blueprints.todoapp.taskdetail
 
 import com.example.android.architecture.blueprints.todoapp.data.Task
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
+import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
+import com.example.android.architecture.blueprints.todoapp.util.launch
+import kotlinx.coroutines.experimental.android.UI
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Listens to user actions from the UI ([TaskDetailFragment]), retrieves the data and updates
@@ -26,7 +29,8 @@ import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepo
 class TaskDetailPresenter(
         private val taskId: String,
         private val tasksRepository: TasksRepository,
-        private val taskDetailView: TaskDetailContract.View
+        private val taskDetailView: TaskDetailContract.View,
+        private val uiContext: CoroutineContext = UI
 ) : TaskDetailContract.Presenter {
 
     init {
@@ -37,35 +41,21 @@ class TaskDetailPresenter(
         openTask()
     }
 
-    private fun openTask() {
+    private fun openTask() = launch(uiContext) {
         if (taskId.isEmpty()) {
             taskDetailView.showMissingTask()
-            return
+        } else {
+            taskDetailView.setLoadingIndicator(true)
+            val result = tasksRepository.getTask(taskId)
+            if (isActive) { // The view may not be able to handle UI updates anymore
+                if (result is Result.Success) {
+                    taskDetailView.setLoadingIndicator(false)
+                    showTask(result.data)
+                } else {
+                    taskDetailView.showMissingTask()
+                }
+            }
         }
-
-        taskDetailView.setLoadingIndicator(true)
-        tasksRepository.getTask(taskId, object : TasksDataSource.GetTaskCallback {
-            override fun onTaskLoaded(task: Task) {
-                with(taskDetailView) {
-                    // The view may not be able to handle UI updates anymore
-                    if (!isActive) {
-                        return@onTaskLoaded
-                    }
-                    setLoadingIndicator(false)
-                }
-                showTask(task)
-            }
-
-            override fun onDataNotAvailable() {
-                with(taskDetailView) {
-                    // The view may not be able to handle UI updates anymore
-                    if (!isActive) {
-                        return@onDataNotAvailable
-                    }
-                    showMissingTask()
-                }
-            }
-        })
     }
 
     override fun editTask() {
@@ -76,31 +66,31 @@ class TaskDetailPresenter(
         taskDetailView.showEditTask(taskId)
     }
 
-    override fun deleteTask() {
+    override fun deleteTask() = launch(uiContext) {
         if (taskId.isEmpty()) {
             taskDetailView.showMissingTask()
-            return
+        } else {
+            tasksRepository.deleteTask(taskId)
+            taskDetailView.showTaskDeleted()
         }
-        tasksRepository.deleteTask(taskId)
-        taskDetailView.showTaskDeleted()
     }
 
-    override fun completeTask() {
+    override fun completeTask() = launch(uiContext) {
         if (taskId.isEmpty()) {
             taskDetailView.showMissingTask()
-            return
+        } else {
+            tasksRepository.completeTask(taskId)
+            taskDetailView.showTaskMarkedComplete()
         }
-        tasksRepository.completeTask(taskId)
-        taskDetailView.showTaskMarkedComplete()
     }
 
-    override fun activateTask() {
+    override fun activateTask() = launch(uiContext) {
         if (taskId.isEmpty()) {
             taskDetailView.showMissingTask()
-            return
+        } else {
+            tasksRepository.activateTask(taskId)
+            taskDetailView.showTaskMarkedActive()
         }
-        tasksRepository.activateTask(taskId)
-        taskDetailView.showTaskMarkedActive()
     }
 
     private fun showTask(task: Task) {

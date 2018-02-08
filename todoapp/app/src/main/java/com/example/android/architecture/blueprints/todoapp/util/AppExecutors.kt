@@ -16,12 +16,10 @@
 
 package com.example.android.architecture.blueprints.todoapp.util
 
-import android.os.Handler
-import android.os.Looper
-import android.support.annotation.VisibleForTesting
-
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
+import kotlinx.coroutines.experimental.DefaultDispatcher
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.newFixedThreadPoolContext
+import kotlin.coroutines.experimental.CoroutineContext
 
 const val THREAD_COUNT = 3
 
@@ -32,16 +30,6 @@ const val THREAD_COUNT = 3
  * webservice requests).
  */
 open class AppExecutors constructor(
-        val diskIO: Executor = DiskIOThreadExecutor(),
-        val networkIO: Executor = Executors.newFixedThreadPool(THREAD_COUNT),
-        val mainThread: Executor = MainThreadExecutor()
-) {
-
-    private class MainThreadExecutor : Executor {
-        private val mainThreadHandler = Handler(Looper.getMainLooper())
-
-        override fun execute(command: Runnable) {
-            mainThreadHandler.post(command)
-        }
-    }
-}
+        val ioContext: CoroutineContext = DefaultDispatcher,
+        val networkContext: CoroutineContext = newFixedThreadPoolContext(THREAD_COUNT, "networkIO"),
+        val uiContext: CoroutineContext = UI)

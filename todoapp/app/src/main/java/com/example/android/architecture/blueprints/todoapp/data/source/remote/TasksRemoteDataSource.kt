@@ -15,10 +15,11 @@
  */
 package com.example.android.architecture.blueprints.todoapp.data.source.remote
 
-import android.os.Handler
 import com.example.android.architecture.blueprints.todoapp.data.Task
+import com.example.android.architecture.blueprints.todoapp.data.source.LocalDataNotFoundException
+import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
-import com.google.common.collect.Lists
+import kotlinx.coroutines.experimental.delay
 
 /**
  * Implementation of the data source that adds a latency simulating network.
@@ -39,79 +40,60 @@ object TasksRemoteDataSource : TasksDataSource {
         TASKS_SERVICE_DATA.put(newTask.id, newTask)
     }
 
-    /**
-     * Note: [TasksDataSource.LoadTasksCallback.onDataNotAvailable] is never fired. In a real remote data
-     * source implementation, this would be fired if the server can't be contacted or the server
-     * returns an error.
-     */
-    override fun getTasks(callback: TasksDataSource.LoadTasksCallback) {
-        // Simulate network by delaying the execution.
-        val tasks = Lists.newArrayList(TASKS_SERVICE_DATA.values)
-        Handler().postDelayed({
-            callback.onTasksLoaded(tasks)
-        }, SERVICE_LATENCY_IN_MILLIS)
+    override suspend fun getTasks(): Result<List<Task>> {
+        val tasks = TASKS_SERVICE_DATA.values.toList()
+        delay(SERVICE_LATENCY_IN_MILLIS) // Simulate network by delaying the execution.
+        return Result.Success(tasks)
     }
 
-    /**
-     * Note: [TasksDataSource.GetTaskCallback.onDataNotAvailable] is never fired. In a real remote data
-     * source implementation, this would be fired if the server can't be contacted or the server
-     * returns an error.
-     */
-    override fun getTask(taskId: String, callback: TasksDataSource.GetTaskCallback) {
+    override suspend fun getTask(taskId: String): Result<Task> {
         val task = TASKS_SERVICE_DATA[taskId]
-
-        // Simulate network by delaying the execution.
-        with(Handler()) {
-            if (task != null) {
-                postDelayed({ callback.onTaskLoaded(task) }, SERVICE_LATENCY_IN_MILLIS)
-            } else {
-                postDelayed({ callback.onDataNotAvailable() }, SERVICE_LATENCY_IN_MILLIS)
-            }
-        }
+        delay(SERVICE_LATENCY_IN_MILLIS) // Simulate network by delaying the execution.
+        return if (task != null) Result.Success(task) else Result.Error(LocalDataNotFoundException())
     }
 
-    override fun saveTask(task: Task) {
+    override suspend fun saveTask(task: Task) {
         TASKS_SERVICE_DATA.put(task.id, task)
     }
 
-    override fun completeTask(task: Task) {
+    override suspend fun completeTask(task: Task) {
         val completedTask = Task(task.title, task.description, task.id).apply {
             isCompleted = true
         }
         TASKS_SERVICE_DATA.put(task.id, completedTask)
     }
 
-    override fun completeTask(taskId: String) {
+    override suspend fun completeTask(taskId: String) {
         // Not required for the remote data source because the {@link TasksRepository} handles
         // converting from a {@code taskId} to a {@link task} using its cached data.
     }
 
-    override fun activateTask(task: Task) {
+    override suspend fun activateTask(task: Task) {
         val activeTask = Task(task.title, task.description, task.id)
         TASKS_SERVICE_DATA.put(task.id, activeTask)
     }
 
-    override fun activateTask(taskId: String) {
+    override suspend fun activateTask(taskId: String) {
         // Not required for the remote data source because the {@link TasksRepository} handles
         // converting from a {@code taskId} to a {@link task} using its cached data.
     }
 
-    override fun clearCompletedTasks() {
+    override suspend fun clearCompletedTasks() {
         TASKS_SERVICE_DATA = TASKS_SERVICE_DATA.filterValues {
             !it.isCompleted
         } as LinkedHashMap<String, Task>
     }
 
-    override fun refreshTasks() {
+    override suspend fun refreshTasks() {
         // Not required because the {@link TasksRepository} handles the logic of refreshing the
         // tasks from all the available data sources.
     }
 
-    override fun deleteAllTasks() {
+    override suspend fun deleteAllTasks() {
         TASKS_SERVICE_DATA.clear()
     }
 
-    override fun deleteTask(taskId: String) {
+    override suspend fun deleteTask(taskId: String) {
         TASKS_SERVICE_DATA.remove(taskId)
     }
 }

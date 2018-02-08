@@ -18,16 +18,21 @@ package com.example.android.architecture.blueprints.todoapp.tasks
 import android.app.Activity
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity
 import com.example.android.architecture.blueprints.todoapp.data.Task
+import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
 import com.example.android.architecture.blueprints.todoapp.util.EspressoIdlingResource
-import java.util.ArrayList
+import com.example.android.architecture.blueprints.todoapp.util.launch
+import kotlinx.coroutines.experimental.android.UI
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Listens to user actions from the UI ([TasksFragment]), retrieves the data and updates the
  * UI as required.
  */
-class TasksPresenter(val tasksRepository: TasksRepository, val tasksView: TasksContract.View)
+class TasksPresenter(private val tasksRepository: TasksRepository,
+                     private val tasksView: TasksContract.View,
+                     private val uiContext: CoroutineContext = UI)
     : TasksContract.Presenter {
 
     override var currentFiltering = TasksFilterType.ALL_TASKS
@@ -61,7 +66,7 @@ class TasksPresenter(val tasksRepository: TasksRepository, val tasksView: TasksC
      * *
      * @param showLoadingUI Pass in true to display a loading icon in the UI
      */
-    private fun loadTasks(forceUpdate: Boolean, showLoadingUI: Boolean) {
+    private fun loadTasks(forceUpdate: Boolean, showLoadingUI: Boolean) = launch(uiContext) {
         if (showLoadingUI) {
             tasksView.setLoadingIndicator(true)
         }
@@ -73,33 +78,32 @@ class TasksPresenter(val tasksRepository: TasksRepository, val tasksView: TasksC
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment() // App is busy until further notice
 
-        tasksRepository.getTasks(object : TasksDataSource.LoadTasksCallback {
-            override fun onTasksLoaded(tasks: List<Task>) {
-                val tasksToShow = ArrayList<Task>()
+        val result = tasksRepository.getTasks()
+        if (result is Result.Success) {
+            val tasksToShow = ArrayList<Task>()
 
-                // This callback may be called twice, once for the cache and once for loading
-                // the data from the server API, so we check before decrementing, otherwise
-                // it throws "Counter has been corrupted!" exception.
-                if (!EspressoIdlingResource.countingIdlingResource.isIdleNow) {
-                    EspressoIdlingResource.decrement() // Set app as idle.
-                }
+            // This callback may be called twice, once for the cache and once for loading
+            // the data from the server API, so we check before decrementing, otherwise
+            // it throws "Counter has been corrupted!" exception.
+            if (!EspressoIdlingResource.countingIdlingResource.isIdleNow) {
+                EspressoIdlingResource.decrement() // Set app as idle.
+            }
 
-                // We filter the tasks based on the requestType
-                for (task in tasks) {
-                    when (currentFiltering) {
-                        TasksFilterType.ALL_TASKS -> tasksToShow.add(task)
-                        TasksFilterType.ACTIVE_TASKS -> if (task.isActive) {
-                            tasksToShow.add(task)
-                        }
-                        TasksFilterType.COMPLETED_TASKS -> if (task.isCompleted) {
-                            tasksToShow.add(task)
-                        }
+            // We filter the tasks based on the requestType
+            for (task in result.data) {
+                when (currentFiltering) {
+                    TasksFilterType.ALL_TASKS -> tasksToShow.add(task)
+                    TasksFilterType.ACTIVE_TASKS -> if (task.isActive) {
+                        tasksToShow.add(task)
+                    }
+                    TasksFilterType.COMPLETED_TASKS -> if (task.isCompleted) {
+                        tasksToShow.add(task)
                     }
                 }
-                // The view may not be able to handle UI updates anymore
-                if (!tasksView.isActive) {
-                    return
-                }
+            }
+
+            // The view may not be able to handle UI updates anymore
+            if (tasksView.isActive) {
                 if (showLoadingUI) {
                     tasksView.setLoadingIndicator(false)
                 }
@@ -107,14 +111,12 @@ class TasksPresenter(val tasksRepository: TasksRepository, val tasksView: TasksC
                 processTasks(tasksToShow)
             }
 
-            override fun onDataNotAvailable() {
-                // The view may not be able to handle UI updates anymore
-                if (!tasksView.isActive) {
-                    return
-                }
+        } else {
+            // The view may not be able to handle UI updates anymore
+            if (tasksView.isActive) {
                 tasksView.showLoadingTasksError()
             }
-        })
+        }
     }
 
     private fun processTasks(tasks: List<Task>) {
@@ -153,19 +155,19 @@ class TasksPresenter(val tasksRepository: TasksRepository, val tasksView: TasksC
         tasksView.showTaskDetailsUi(requestedTask.id)
     }
 
-    override fun completeTask(completedTask: Task) {
+    override fun completeTask(completedTask: Task) = launch(uiContext) {
         tasksRepository.completeTask(completedTask)
         tasksView.showTaskMarkedComplete()
         loadTasks(false, false)
     }
 
-    override fun activateTask(activeTask: Task) {
+    override fun activateTask(activeTask: Task) = launch(uiContext) {
         tasksRepository.activateTask(activeTask)
         tasksView.showTaskMarkedActive()
         loadTasks(false, false)
     }
 
-    override fun clearCompletedTasks() {
+    override fun clearCompletedTasks() = launch {
         tasksRepository.clearCompletedTasks()
         tasksView.showCompletedTasksCleared()
         loadTasks(false, false)

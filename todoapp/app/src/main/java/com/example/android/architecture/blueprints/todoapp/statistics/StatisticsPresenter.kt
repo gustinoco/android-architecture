@@ -16,18 +16,21 @@
 package com.example.android.architecture.blueprints.todoapp.statistics
 
 
-import com.example.android.architecture.blueprints.todoapp.data.Task
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
+import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
 import com.example.android.architecture.blueprints.todoapp.util.EspressoIdlingResource
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Listens to user actions from the UI ([StatisticsFragment]), retrieves the data and updates
  * the UI as required.
  */
 class StatisticsPresenter(
-        val tasksRepository: TasksRepository,
-        val statisticsView: StatisticsContract.View
+        private val tasksRepository: TasksRepository,
+        private val statisticsView: StatisticsContract.View,
+        private val uiContext: CoroutineContext = UI
 ) : StatisticsContract.Presenter {
 
     init {
@@ -38,40 +41,35 @@ class StatisticsPresenter(
         loadStatistics()
     }
 
-    private fun loadStatistics() {
+    private fun loadStatistics() = launch(uiContext) {
         statisticsView.setProgressIndicator(true)
 
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment() // App is busy until further notice
 
-        tasksRepository.getTasks(object : TasksDataSource.LoadTasksCallback {
-            override fun onTasksLoaded(tasks: List<Task>) {
-                // We calculate number of active and completed tasks
-                val completedTasks = tasks.filter { it.isCompleted }.size
-                val activeTasks = tasks.size - completedTasks
+        val result = tasksRepository.getTasks()
+        if (result is Result.Success) {
+            // We calculate number of active and completed tasks
+            val completedTasks = result.data.filter { it.isCompleted }.size
+            val activeTasks = result.data.size - completedTasks
 
-                // This callback may be called twice, once for the cache and once for loading
-                // the data from the server API, so we check before decrementing, otherwise
-                // it throws "Counter has been corrupted!" exception.
-                if (!EspressoIdlingResource.countingIdlingResource.isIdleNow) {
-                    EspressoIdlingResource.decrement() // Set app as idle.
-                }
-                // The view may not be able to handle UI updates anymore
-                if (!statisticsView.isActive) {
-                    return
-                }
+            // This callback may be called twice, once for the cache and once for loading
+            // the data from the server API, so we check before decrementing, otherwise
+            // it throws "Counter has been corrupted!" exception.
+            if (!EspressoIdlingResource.countingIdlingResource.isIdleNow) {
+                EspressoIdlingResource.decrement() // Set app as idle.
+            }
+            // The view may not be able to handle UI updates anymore
+            if (statisticsView.isActive) {
                 statisticsView.setProgressIndicator(false)
                 statisticsView.showStatistics(activeTasks, completedTasks)
             }
-
-            override fun onDataNotAvailable() {
-                // The view may not be able to handle UI updates anymore
-                if (!statisticsView.isActive) {
-                    return
-                }
+        } else {
+            if (statisticsView.isActive) {
                 statisticsView.showLoadingStatisticsError()
             }
-        })
+
+        }
     }
 }

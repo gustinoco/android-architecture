@@ -17,9 +17,11 @@ package com.example.android.architecture.blueprints.todoapp.data.source.local
 
 import android.support.annotation.VisibleForTesting
 import com.example.android.architecture.blueprints.todoapp.data.Task
+import com.example.android.architecture.blueprints.todoapp.data.source.LocalDataNotFoundException
+import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
 import com.example.android.architecture.blueprints.todoapp.util.AppExecutors
-
+import kotlinx.coroutines.experimental.withContext
 
 /**
  * Concrete implementation of a data source as a db.
@@ -29,78 +31,61 @@ class TasksLocalDataSource private constructor(
         val tasksDao: TasksDao
 ) : TasksDataSource {
 
-    /**
-     * Note: [TasksDataSource.LoadTasksCallback.onDataNotAvailable] is fired if the database doesn't exist
-     * or the table is empty.
-     */
-    override fun getTasks(callback: TasksDataSource.LoadTasksCallback) {
-        appExecutors.diskIO.execute {
-            val tasks = tasksDao.getTasks()
-            appExecutors.mainThread.execute {
-                if (tasks.isEmpty()) {
-                    // This will be called if the table is new or just empty.
-                    callback.onDataNotAvailable()
-                } else {
-                    callback.onTasksLoaded(tasks)
-                }
-            }
+    override suspend fun getTasks(): Result<List<Task>> = withContext(appExecutors.ioContext) {
+        val tasks = tasksDao.getTasks()
+        if (tasks.isNotEmpty()) {
+            Result.Success(tasksDao.getTasks())
+        } else {
+            Result.Error(LocalDataNotFoundException())
         }
     }
 
-    /**
-     * Note: [TasksDataSource.GetTaskCallback.onDataNotAvailable] is fired if the [Task] isn't
-     * found.
-     */
-    override fun getTask(taskId: String, callback: TasksDataSource.GetTaskCallback) {
-        appExecutors.diskIO.execute {
-            val task = tasksDao.getTaskById(taskId)
-            appExecutors.mainThread.execute {
-                if (task != null) {
-                    callback.onTaskLoaded(task)
-                } else {
-                    callback.onDataNotAvailable()
-                }
-            }
-        }
+    override suspend fun getTask(taskId: String): Result<Task> = withContext(appExecutors.ioContext) {
+        val task = tasksDao.getTaskById(taskId)
+        if (task != null) Result.Success(task) else Result.Error(LocalDataNotFoundException())
     }
 
-    override fun saveTask(task: Task) {
-        appExecutors.diskIO.execute { tasksDao.insertTask(task) }
+    override suspend fun saveTask(task: Task) = withContext(appExecutors.ioContext) {
+        tasksDao.insertTask(task)
     }
 
-    override fun completeTask(task: Task) {
-        appExecutors.diskIO.execute { tasksDao.updateCompleted(task.id, true) }
+    override suspend fun completeTask(task: Task) = withContext(appExecutors.ioContext) {
+        tasksDao.updateCompleted(task.id, true)
     }
 
-    override fun completeTask(taskId: String) {
+    override suspend fun completeTask(taskId: String) {
         // Not required for the local data source because the {@link TasksRepository} handles
         // converting from a {@code taskId} to a {@link task} using its cached data.
     }
 
-    override fun activateTask(task: Task) {
-        appExecutors.diskIO.execute { tasksDao.updateCompleted(task.id, false) }
+    override suspend fun activateTask(task: Task) = withContext(appExecutors.ioContext) {
+        tasksDao.updateCompleted(task.id, false)
     }
 
-    override fun activateTask(taskId: String) {
+    override suspend fun activateTask(taskId: String) {
         // Not required for the local data source because the {@link TasksRepository} handles
         // converting from a {@code taskId} to a {@link task} using its cached data.
     }
 
-    override fun clearCompletedTasks() {
-        appExecutors.diskIO.execute { tasksDao.deleteCompletedTasks() }
+    override suspend fun clearCompletedTasks() {
+        withContext(appExecutors.ioContext) {
+            tasksDao.deleteCompletedTasks()
+        }
     }
 
-    override fun refreshTasks() {
+    override suspend fun refreshTasks() {
         // Not required because the {@link TasksRepository} handles the logic of refreshing the
         // tasks from all the available data sources.
     }
 
-    override fun deleteAllTasks() {
-        appExecutors.diskIO.execute { tasksDao.deleteTasks() }
+    override suspend fun deleteAllTasks() = withContext(appExecutors.ioContext) {
+        tasksDao.deleteTasks()
     }
 
-    override fun deleteTask(taskId: String) {
-        appExecutors.diskIO.execute { tasksDao.deleteTaskById(taskId) }
+    override suspend fun deleteTask(taskId: String) {
+        withContext(appExecutors.ioContext) {
+            tasksDao.deleteTaskById(taskId)
+        }
     }
 
     companion object {

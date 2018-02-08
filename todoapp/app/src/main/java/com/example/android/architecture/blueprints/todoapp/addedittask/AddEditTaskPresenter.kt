@@ -17,7 +17,11 @@
 package com.example.android.architecture.blueprints.todoapp.addedittask
 
 import com.example.android.architecture.blueprints.todoapp.data.Task
+import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
+import com.example.android.architecture.blueprints.todoapp.util.launch
+import kotlinx.coroutines.experimental.android.UI
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Listens to user actions from the UI ([AddEditTaskFragment]), retrieves the data and updates
@@ -32,10 +36,11 @@ import com.example.android.architecture.blueprints.todoapp.data.source.TasksData
  */
 class AddEditTaskPresenter(
         private val taskId: String?,
-        val tasksRepository: TasksDataSource,
-        val addTaskView: AddEditTaskContract.View,
-        override var isDataMissing: Boolean
-) : AddEditTaskContract.Presenter, TasksDataSource.GetTaskCallback {
+        private val tasksRepository: TasksDataSource,
+        private val addTaskView: AddEditTaskContract.View,
+        override var isDataMissing: Boolean,
+        private val uiContext: CoroutineContext = UI
+) : AddEditTaskContract.Presenter {
 
     init {
         addTaskView.presenter = this
@@ -55,14 +60,16 @@ class AddEditTaskPresenter(
         }
     }
 
-    override fun populateTask() {
+    override fun populateTask() = launch(uiContext) {
         if (taskId == null) {
             throw RuntimeException("populateTask() was called but task is new.")
         }
-        tasksRepository.getTask(taskId, this)
+
+        val result = tasksRepository.getTask(taskId)
+        if (result is Result.Success) onTaskLoaded(result.data) else onDataNotAvailable()
     }
 
-    override fun onTaskLoaded(task: Task) {
+    private fun onTaskLoaded(task: Task) {
         // The view may not be able to handle UI updates anymore
         if (addTaskView.isActive) {
             addTaskView.setTitle(task.title)
@@ -71,14 +78,14 @@ class AddEditTaskPresenter(
         isDataMissing = false
     }
 
-    override fun onDataNotAvailable() {
+    private fun onDataNotAvailable() {
         // The view may not be able to handle UI updates anymore
         if (addTaskView.isActive) {
             addTaskView.showEmptyTaskError()
         }
     }
 
-    private fun createTask(title: String, description: String) {
+    private fun createTask(title: String, description: String) = launch(uiContext) {
         val newTask = Task(title, description)
         if (newTask.isEmpty) {
             addTaskView.showEmptyTaskError()
@@ -88,7 +95,7 @@ class AddEditTaskPresenter(
         }
     }
 
-    private fun updateTask(title: String, description: String) {
+    private fun updateTask(title: String, description: String) = launch(uiContext) {
         if (taskId == null) {
             throw RuntimeException("updateTask() was called but task is new.")
         }
