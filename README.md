@@ -1,4 +1,4 @@
-# todo-mvp-kotlin
+# todo-mvp-kotlin-coroutines
 
 This version of the app is called `todo-mvp-kotlin-coroutines` and is based on [todo-mvp-kotlin](https://github.com/googlesamples/android-architecture/tree/dev-todo-mvp-kotlin/). The sample aims to:
 
