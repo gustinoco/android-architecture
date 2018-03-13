@@ -18,7 +18,7 @@ package com.example.android.architecture.blueprints.todoapp.data.source
 import com.example.android.architecture.blueprints.todoapp.anyMockito
 import com.example.android.architecture.blueprints.todoapp.data.Task
 import com.example.android.architecture.blueprints.todoapp.eq
-import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import com.example.android.architecture.blueprints.todoapp.util.runBlockingSilent
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.instanceOf
 import org.junit.After
@@ -61,7 +61,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun getTasks_repositoryCachesAfterFirstApiCall() = runBlocking {
+    fun getTasks_repositoryCachesAfterFirstApiCall() = runBlockingSilent {
         // When two calls are issued to the tasks repository
         twoTasksLoadCallsToRepository()
 
@@ -70,7 +70,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun getTasks_requestsAllTasksFromLocalDataSource() = runBlocking {
+    fun getTasks_requestsAllTasksFromLocalDataSource() = runBlockingSilent {
         setTasksAvailable(tasksLocalDataSource, TASKS)
 
         // When tasks are requested from the tasks repository
@@ -81,7 +81,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun saveTask_savesTaskToServiceAPI() = runBlocking {
+    fun saveTask_savesTaskToServiceAPI() = runBlockingSilent {
         // Given a stub task with title and description
         val newTask = Task(TASK_TITLE_1, TASK_GENERIC_DESCRIPTION)
 
@@ -95,7 +95,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun completeTask_completesTaskToServiceAPIUpdatesCache() = runBlocking {
+    fun completeTask_completesTaskToServiceAPIUpdatesCache() = runBlockingSilent {
         with(tasksRepository) {
             // Given a stub active task with title and description added in the repository
             val newTask = Task(TASK_TITLE_1, TASK_GENERIC_DESCRIPTION)
@@ -115,7 +115,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun completeTaskId_completesTaskToServiceAPIUpdatesCache() = runBlocking {
+    fun completeTaskId_completesTaskToServiceAPIUpdatesCache() = runBlockingSilent {
         // Given a stub active task with title and description added in the repository
         val newTask = Task(TASK_TITLE_1, TASK_GENERIC_DESCRIPTION)
         with(tasksRepository) {
@@ -135,7 +135,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun activateTask_activatesTaskToServiceAPIUpdatesCache() = runBlocking {
+    fun activateTask_activatesTaskToServiceAPIUpdatesCache() = runBlockingSilent {
         // Given a stub completed task with title and description in the repository
         val newTask = Task(TASK_TITLE_1, TASK_GENERIC_DESCRIPTION).apply { isCompleted = true }
         with(tasksRepository) {
@@ -153,7 +153,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun activateTaskId_activatesTaskToServiceAPIUpdatesCache() = runBlocking {
+    fun activateTaskId_activatesTaskToServiceAPIUpdatesCache() = runBlockingSilent {
         // Given a stub completed task with title and description in the repository
         val newTask = Task(TASK_TITLE_1, TASK_GENERIC_DESCRIPTION).apply { isCompleted = true }
         with(tasksRepository) {
@@ -173,7 +173,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun getTask_requestsSingleTaskFromLocalDataSource() = runBlocking {
+    fun getTask_requestsSingleTaskFromLocalDataSource() = runBlockingSilent {
         `when`(tasksLocalDataSource.getTask(TASK_TITLE_1)).thenReturn(Result.Success(Task()))
 
         // When a task is requested from the tasks repository
@@ -184,7 +184,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun deleteCompletedTasks_deleteCompletedTasksToServiceAPIUpdatesCache() = runBlocking {
+    fun deleteCompletedTasks_deleteCompletedTasksToServiceAPIUpdatesCache() = runBlockingSilent {
         with(tasksRepository) {
             // Given 2 stub completed tasks and 1 stub active tasks in the repository
             val newTask = Task(TASK_TITLE_1, TASK_GENERIC_DESCRIPTION).apply { isCompleted = true }
@@ -211,7 +211,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun deleteAllTasks_deleteTasksToServiceAPIUpdatesCache() = runBlocking {
+    fun deleteAllTasks_deleteTasksToServiceAPIUpdatesCache() = runBlockingSilent {
         with(tasksRepository) {
             // Given 2 stub completed tasks and 1 stub active tasks in the repository
             val newTask = Task(TASK_TITLE_1, TASK_GENERIC_DESCRIPTION).apply { isCompleted = true }
@@ -233,7 +233,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun deleteTask_deleteTaskToServiceAPIRemovedFromCache() = runBlocking {
+    fun deleteTask_deleteTaskToServiceAPIRemovedFromCache() = runBlockingSilent {
         with(tasksRepository) {
             // Given a task in the repository
             val newTask = Task(TASK_TITLE_1, TASK_GENERIC_DESCRIPTION).apply { isCompleted }
@@ -253,7 +253,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun getTasksWithDirtyCache_tasksAreRetrievedFromRemote() = runBlocking {
+    fun getTasksWithDirtyCache_tasksAreRetrievedFromRemote() = runBlockingSilent {
         // And the remote data source has data available
         setTasksAvailable(tasksRemoteDataSource, TASKS)
 
@@ -274,7 +274,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun getTasksWithLocalDataSourceUnavailable_tasksAreRetrievedFromRemote() = runBlocking {
+    fun getTasksWithLocalDataSourceUnavailable_tasksAreRetrievedFromRemote() = runBlockingSilent {
         // And the local data source has no data available
         setTasksNotAvailable(tasksLocalDataSource)
 
@@ -294,7 +294,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun getTasksWithBothDataSourcesUnavailable_firesOnDataUnavailable() = runBlocking {
+    fun getTasksWithBothDataSourcesUnavailable_firesOnDataUnavailable() = runBlockingSilent {
         // And the local data source has no data available
         setTasksNotAvailable(tasksLocalDataSource)
 
@@ -309,7 +309,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun getTaskWithBothDataSourcesUnavailable_firesOnDataUnavailable() = runBlocking {
+    fun getTaskWithBothDataSourcesUnavailable_firesOnDataUnavailable() = runBlockingSilent {
         // Given a task id
         val taskId = "123"
 
@@ -327,7 +327,7 @@ class TasksRepositoryTest {
     }
 
     @Test
-    fun getTasks_refreshesLocalDataSource() = runBlocking {
+    fun getTasks_refreshesLocalDataSource() = runBlockingSilent {
         // Make the remote data source return data
         setTasksAvailable(tasksRemoteDataSource, TASKS)
 
@@ -344,7 +344,7 @@ class TasksRepositoryTest {
     /**
      * Convenience method that issues two calls to the tasks repository
      */
-    private fun twoTasksLoadCallsToRepository() = runBlocking {
+    private fun twoTasksLoadCallsToRepository() = runBlockingSilent {
         // Local data source doesn't have data yet
         `when`(tasksLocalDataSource.getTasks()).thenReturn(Result.Error(DataSourceException()))
 
@@ -363,15 +363,15 @@ class TasksRepositoryTest {
         tasksRepository.getTasks() // Second call to API
     }
 
-    private fun setTasksNotAvailable(dataSource: TasksDataSource) = runBlocking {
+    private fun setTasksNotAvailable(dataSource: TasksDataSource) = runBlockingSilent {
         `when`(dataSource.getTasks()).thenReturn(Result.Error(DataSourceException()))
     }
 
-    private fun setTasksAvailable(dataSource: TasksDataSource, tasks: List<Task>) = runBlocking {
+    private fun setTasksAvailable(dataSource: TasksDataSource, tasks: List<Task>) = runBlockingSilent {
         `when`(dataSource.getTasks()).thenReturn(Result.Success(tasks))
     }
 
-    private fun setTaskNotAvailable(dataSource: TasksDataSource, taskId: String) = runBlocking {
+    private fun setTaskNotAvailable(dataSource: TasksDataSource, taskId: String) = runBlockingSilent {
         `when`(dataSource.getTask(taskId)).thenReturn(Result.Error(DataSourceException()))
     }
 

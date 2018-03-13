@@ -21,7 +21,7 @@ import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepo
 import com.example.android.architecture.blueprints.todoapp.eq
 import com.example.android.architecture.blueprints.todoapp.anyMockito
 import com.example.android.architecture.blueprints.todoapp.data.source.Result
-import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import com.example.android.architecture.blueprints.todoapp.util.runBlockingSilent
 import kotlinx.coroutines.experimental.Unconfined
 import org.hamcrest.CoreMatchers.`is`
 import org.junit.Assert.assertThat
@@ -64,7 +64,7 @@ class AddEditTaskPresenterTest {
     }
 
     @Test
-    fun saveNewTaskToRepository_showsSuccessMessageUi() = runBlocking {
+    fun saveNewTaskToRepository_showsSuccessMessageUi() = runBlockingSilent {
         // Get a reference to the class under test
         addEditTaskPresenter = AddEditTaskPresenter(null, tasksRepository, addEditTaskView, true, Unconfined)
 
@@ -89,7 +89,7 @@ class AddEditTaskPresenterTest {
     }
 
     @Test
-    fun saveExistingTaskToRepository_showsSuccessMessageUi() = runBlocking {
+    fun saveExistingTaskToRepository_showsSuccessMessageUi() = runBlockingSilent {
         // Get a reference to the class under test
         addEditTaskPresenter = AddEditTaskPresenter(
                 "1", tasksRepository, addEditTaskView, true, Unconfined)
@@ -103,7 +103,7 @@ class AddEditTaskPresenterTest {
     }
 
     @Test
-    fun populateTask_callsRepoAndUpdatesView() = runBlocking {
+    fun populateTask_callsRepoAndUpdatesView() = runBlockingSilent {
         val testTask = Task("TITLE", "DESCRIPTION")
         `when`(tasksRepository.getTask(testTask.id)).thenReturn(Result.Success(testTask))
         // Get a reference to the class under test

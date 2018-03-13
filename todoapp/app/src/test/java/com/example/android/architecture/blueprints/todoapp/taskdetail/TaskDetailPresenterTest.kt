@@ -19,7 +19,7 @@ import com.example.android.architecture.blueprints.todoapp.data.Task
 import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
 import com.example.android.architecture.blueprints.todoapp.eq
-import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import com.example.android.architecture.blueprints.todoapp.util.runBlockingSilent
 import kotlinx.coroutines.experimental.Unconfined
 import org.junit.Before
 import org.junit.Test
@@ -69,7 +69,7 @@ class TaskDetailPresenterTest {
     }
 
     @Test
-    fun getActiveTaskFromRepositoryAndLoadIntoView() = runBlocking {
+    fun getActiveTaskFromRepositoryAndLoadIntoView() = runBlockingSilent {
         // When task is loaded
         `when`(tasksRepository.getTask(ACTIVE_TASK.id)).thenReturn(Result.Success(ACTIVE_TASK))
 
@@ -91,7 +91,7 @@ class TaskDetailPresenterTest {
     }
 
     @Test
-    fun getCompletedTaskFromRepositoryAndLoadIntoView() = runBlocking {
+    fun getCompletedTaskFromRepositoryAndLoadIntoView() = runBlockingSilent {
         // When task is loaded
         `when`(tasksRepository.getTask(COMPLETED_TASK.id)).thenReturn(Result.Success(COMPLETED_TASK))
 
@@ -120,7 +120,7 @@ class TaskDetailPresenterTest {
     }
 
     @Test
-    fun deleteTask() = runBlocking {
+    fun deleteTask() = runBlockingSilent {
         // Given an initialized TaskDetailPresenter with stubbed task
         val task = Task(TITLE_TEST, DESCRIPTION_TEST)
 
@@ -134,7 +134,7 @@ class TaskDetailPresenterTest {
     }
 
     @Test
-    fun completeTask() = runBlocking {
+    fun completeTask() = runBlockingSilent {
         // Given an initialized presenter with an active task
         val task = Task(TITLE_TEST, DESCRIPTION_TEST)
         taskDetailPresenter = TaskDetailPresenter(
@@ -149,7 +149,7 @@ class TaskDetailPresenterTest {
     }
 
     @Test
-    fun activateTask() = runBlocking {
+    fun activateTask() = runBlockingSilent {
         // Given an initialized presenter with a completed task
         val task = Task(TITLE_TEST, DESCRIPTION_TEST).apply { isCompleted = true }
         taskDetailPresenter = TaskDetailPresenter(

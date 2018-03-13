@@ -22,7 +22,7 @@ import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
 import com.example.android.architecture.blueprints.todoapp.util.EspressoIdlingResource
-import com.example.android.architecture.blueprints.todoapp.util.launch
+import com.example.android.architecture.blueprints.todoapp.util.launchSilent
 import kotlinx.coroutines.experimental.android.UI
 import kotlin.coroutines.experimental.CoroutineContext
 
@@ -66,7 +66,7 @@ class TasksPresenter(private val tasksRepository: TasksRepository,
      * *
      * @param showLoadingUI Pass in true to display a loading icon in the UI
      */
-    private fun loadTasks(forceUpdate: Boolean, showLoadingUI: Boolean) = launch(uiContext) {
+    private fun loadTasks(forceUpdate: Boolean, showLoadingUI: Boolean) = launchSilent(uiContext) {
         if (showLoadingUI) {
             tasksView.setLoadingIndicator(true)
         }
@@ -155,19 +155,19 @@ class TasksPresenter(private val tasksRepository: TasksRepository,
         tasksView.showTaskDetailsUi(requestedTask.id)
     }
 
-    override fun completeTask(completedTask: Task) = launch(uiContext) {
+    override fun completeTask(completedTask: Task) = launchSilent(uiContext) {
         tasksRepository.completeTask(completedTask)
         tasksView.showTaskMarkedComplete()
         loadTasks(false, false)
     }
 
-    override fun activateTask(activeTask: Task) = launch(uiContext) {
+    override fun activateTask(activeTask: Task) = launchSilent(uiContext) {
         tasksRepository.activateTask(activeTask)
         tasksView.showTaskMarkedActive()
         loadTasks(false, false)
     }
 
-    override fun clearCompletedTasks() = launch {
+    override fun clearCompletedTasks() = launchSilent {
         tasksRepository.clearCompletedTasks()
         tasksView.showCompletedTasksCleared()
         loadTasks(false, false)

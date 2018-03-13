@@ -22,7 +22,7 @@ import android.support.test.runner.AndroidJUnit4
 import com.example.android.architecture.blueprints.todoapp.data.Task
 import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
-import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import com.example.android.architecture.blueprints.todoapp.util.runBlockingSilent
 import com.example.android.architecture.blueprints.todoapp.utils.SingleExecutors
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.instanceOf
@@ -71,7 +71,7 @@ class TasksLocalDataSourceTest {
     }
 
     @Test
-    fun saveTask_retrievesTask() = runBlocking {
+    fun saveTask_retrievesTask() = runBlockingSilent {
         // Given a new task
         val newTask = Task(TITLE)
 
@@ -89,7 +89,7 @@ class TasksLocalDataSourceTest {
     }
 
     @Test
-    fun completeTask_retrievedTaskIsComplete() = runBlocking {
+    fun completeTask_retrievedTaskIsComplete() = runBlockingSilent {
         // Given a new task in the persistent repository
         val newTask = Task(TITLE)
         localDataSource.saveTask(newTask)
@@ -108,7 +108,7 @@ class TasksLocalDataSourceTest {
     }
 
     @Test
-    fun activateTask_retrievedTaskIsActive() = runBlocking {
+    fun activateTask_retrievedTaskIsActive() = runBlockingSilent {
         // Given a new completed task in the persistent repository
         val newTask = Task(TITLE)
         with(localDataSource) {
@@ -127,7 +127,7 @@ class TasksLocalDataSourceTest {
     }
 
     @Test
-    fun clearCompletedTask_taskNotRetrievable() = runBlocking {
+    fun clearCompletedTask_taskNotRetrievable() = runBlockingSilent {
         // Given 2 new completed tasks and 1 active task in the persistent repository
         val newTask1 = Task(TITLE)
         val newTask2 = Task(TITLE2)
@@ -158,7 +158,7 @@ class TasksLocalDataSourceTest {
     }
 
     @Test
-    fun deleteAllTasks_emptyListOfRetrievedTask() = runBlocking {
+    fun deleteAllTasks_emptyListOfRetrievedTask() = runBlockingSilent {
         with(localDataSource) {
             // Given a new task in the persistent repository and a mocked callback
             saveTask(Task(TITLE))
@@ -173,7 +173,7 @@ class TasksLocalDataSourceTest {
     }
 
     @Test
-    fun getTasks_retrieveSavedTasks() = runBlocking {
+    fun getTasks_retrieveSavedTasks() = runBlockingSilent {
         with(localDataSource) {
             // Given 2 new tasks in the persistent repository
             val newTask1 = Task(TITLE)

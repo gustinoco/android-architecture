@@ -19,7 +19,7 @@ package com.example.android.architecture.blueprints.todoapp.addedittask
 import com.example.android.architecture.blueprints.todoapp.data.Task
 import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
-import com.example.android.architecture.blueprints.todoapp.util.launch
+import com.example.android.architecture.blueprints.todoapp.util.launchSilent
 import kotlinx.coroutines.experimental.android.UI
 import kotlin.coroutines.experimental.CoroutineContext
 
@@ -60,7 +60,7 @@ class AddEditTaskPresenter(
         }
     }
 
-    override fun populateTask() = launch(uiContext) {
+    override fun populateTask() = launchSilent(uiContext) {
         if (taskId == null) {
             throw RuntimeException("populateTask() was called but task is new.")
         }
@@ -85,7 +85,7 @@ class AddEditTaskPresenter(
         }
     }
 
-    private fun createTask(title: String, description: String) = launch(uiContext) {
+    private fun createTask(title: String, description: String) = launchSilent(uiContext) {
         val newTask = Task(title, description)
         if (newTask.isEmpty) {
             addTaskView.showEmptyTaskError()
@@ -95,7 +95,7 @@ class AddEditTaskPresenter(
         }
     }
 
-    private fun updateTask(title: String, description: String) = launch(uiContext) {
+    private fun updateTask(title: String, description: String) = launchSilent(uiContext) {
         if (taskId == null) {
             throw RuntimeException("updateTask() was called but task is new.")
         }

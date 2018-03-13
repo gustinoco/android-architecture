@@ -15,13 +15,12 @@
  */
 package com.example.android.architecture.blueprints.todoapp.statistics
 
-import com.example.android.architecture.blueprints.todoapp.capture
 import com.example.android.architecture.blueprints.todoapp.data.Task
 import com.example.android.architecture.blueprints.todoapp.data.source.DataSourceException
 import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
-import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import com.example.android.architecture.blueprints.todoapp.util.runBlockingSilent
 import kotlinx.coroutines.experimental.Unconfined
 import org.junit.Before
 import org.junit.Test
@@ -68,7 +67,7 @@ class StatisticsPresenterTest {
     }
 
     @Test
-    fun loadEmptyTasksFromRepository_CallViewToDisplay() = runBlocking {
+    fun loadEmptyTasksFromRepository_CallViewToDisplay() = runBlockingSilent {
         setTasksAvailable(tasksRepository, tasks)
 
         // Given an initialized StatisticsPresenter with no tasks
@@ -86,7 +85,7 @@ class StatisticsPresenterTest {
     }
 
     @Test
-    fun loadNonEmptyTasksFromRepository_CallViewToDisplay() = runBlocking {
+    fun loadNonEmptyTasksFromRepository_CallViewToDisplay() = runBlockingSilent {
         setTasksAvailable(tasksRepository, tasks)
 
         // Given an initialized StatisticsPresenter with 1 active and 2 completed tasks
@@ -104,7 +103,7 @@ class StatisticsPresenterTest {
     }
 
     @Test
-    fun loadStatisticsWhenTasksAreUnavailable_CallErrorToDisplay() = runBlocking {
+    fun loadStatisticsWhenTasksAreUnavailable_CallErrorToDisplay() = runBlockingSilent {
         // Tasks data isn't available
         setTasksNotAvailable(tasksRepository)
 

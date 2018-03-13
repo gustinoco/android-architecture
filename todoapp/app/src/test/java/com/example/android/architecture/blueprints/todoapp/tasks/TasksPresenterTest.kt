@@ -23,7 +23,7 @@ import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepo
 import com.example.android.architecture.blueprints.todoapp.anyMockito
 import com.example.android.architecture.blueprints.todoapp.data.source.DataSourceException
 import com.example.android.architecture.blueprints.todoapp.data.source.Result
-import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import com.example.android.architecture.blueprints.todoapp.util.runBlockingSilent
 import kotlinx.coroutines.experimental.Unconfined
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -73,7 +73,7 @@ class TasksPresenterTest {
     }
 
     @Test
-    fun loadAllTasksFromRepositoryAndLoadIntoView() = runBlocking {
+    fun loadAllTasksFromRepositoryAndLoadIntoView() = runBlockingSilent {
         setTasksAvailable(tasksRepository, tasks)
 
         with(tasksPresenter) {
@@ -96,7 +96,7 @@ class TasksPresenterTest {
     }
 
     @Test
-    fun loadActiveTasksFromRepositoryAndLoadIntoView() = runBlocking {
+    fun loadActiveTasksFromRepositoryAndLoadIntoView() = runBlockingSilent {
         setTasksAvailable(tasksRepository, tasks)
 
         with(tasksPresenter) {
@@ -114,7 +114,7 @@ class TasksPresenterTest {
     }
 
     @Test
-    fun loadCompletedTasksFromRepositoryAndLoadIntoView() = runBlocking {
+    fun loadCompletedTasksFromRepositoryAndLoadIntoView() = runBlockingSilent {
         setTasksAvailable(tasksRepository, tasks)
 
         with(tasksPresenter) {
@@ -153,7 +153,7 @@ class TasksPresenterTest {
     }
 
     @Test
-    fun completeTask_ShowsTaskMarkedComplete() = runBlocking {
+    fun completeTask_ShowsTaskMarkedComplete() = runBlockingSilent {
         // Given a stubbed task
         val task = Task("Details Requested", "For this task")
 
@@ -166,7 +166,7 @@ class TasksPresenterTest {
     }
 
     @Test
-    fun activateTask_ShowsTaskMarkedActive() = runBlocking {
+    fun activateTask_ShowsTaskMarkedActive() = runBlockingSilent {
         // Given a stubbed completed task
         val task = Task("Details Requested", "For this task").apply { isCompleted = true }
         with(tasksPresenter) {
@@ -182,7 +182,7 @@ class TasksPresenterTest {
     }
 
     @Test
-    fun unavailableTasks_ShowsError() = runBlocking {
+    fun unavailableTasks_ShowsError() = runBlockingSilent {
         setTasksNotAvailable(tasksRepository)
 
         with(tasksPresenter) {

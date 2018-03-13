@@ -18,7 +18,7 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail
 import com.example.android.architecture.blueprints.todoapp.data.Task
 import com.example.android.architecture.blueprints.todoapp.data.source.Result
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
-import com.example.android.architecture.blueprints.todoapp.util.launch
+import com.example.android.architecture.blueprints.todoapp.util.launchSilent
 import kotlinx.coroutines.experimental.android.UI
 import kotlin.coroutines.experimental.CoroutineContext
 
@@ -41,7 +41,7 @@ class TaskDetailPresenter(
         openTask()
     }
 
-    private fun openTask() = launch(uiContext) {
+    private fun openTask() = launchSilent(uiContext) {
         if (taskId.isEmpty()) {
             taskDetailView.showMissingTask()
         } else {
@@ -66,7 +66,7 @@ class TaskDetailPresenter(
         taskDetailView.showEditTask(taskId)
     }
 
-    override fun deleteTask() = launch(uiContext) {
+    override fun deleteTask() = launchSilent(uiContext) {
         if (taskId.isEmpty()) {
             taskDetailView.showMissingTask()
         } else {
@@ -75,7 +75,7 @@ class TaskDetailPresenter(
         }
     }
 
-    override fun completeTask() = launch(uiContext) {
+    override fun completeTask() = launchSilent(uiContext) {
         if (taskId.isEmpty()) {
             taskDetailView.showMissingTask()
         } else {
@@ -84,7 +84,7 @@ class TaskDetailPresenter(
         }
     }
 
-    override fun activateTask() = launch(uiContext) {
+    override fun activateTask() = launchSilent(uiContext) {
         if (taskId.isEmpty()) {
             taskDetailView.showMissingTask()
         } else {

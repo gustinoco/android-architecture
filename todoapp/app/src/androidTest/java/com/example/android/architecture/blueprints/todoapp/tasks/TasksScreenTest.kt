@@ -33,7 +33,7 @@ import android.widget.ListView
 import com.example.android.architecture.blueprints.todoapp.Injection
 import com.example.android.architecture.blueprints.todoapp.R
 import com.example.android.architecture.blueprints.todoapp.TestUtils
-import com.example.android.architecture.blueprints.todoapp.util.runBlocking
+import com.example.android.architecture.blueprints.todoapp.util.runBlockingSilent
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
@@ -70,7 +70,7 @@ class TasksScreenTest {
          * To avoid a long list of tasks and the need to scroll through the list to find a
          * task, we call [TasksDataSource.deleteAllTasks] before each test.
          */
-        override fun beforeActivityLaunched() = runBlocking {
+        override fun beforeActivityLaunched() = runBlockingSilent {
             super.beforeActivityLaunched()
             // Doing this in @Before generates a race condition.
             Injection.provideTasksRepository(InstrumentationRegistry.getTargetContext())
