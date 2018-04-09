@@ -7,7 +7,7 @@ ext {
     buildToolsVersion = '26.0.2'
 
     // App dependencies
-    supportLibraryVersion = '26.1.0'
+    supportLibraryVersion = '27.1.0'
     guavaVersion = '22.0-android'
     junitVersion = '4.12'
     mockitoVersion = '2.8.47'
@@ -16,12 +16,12 @@ ext {
     rulesVersion = '1.0.1'
     espressoVersion = '3.0.1'
     roomVersion = "1.0.0"
-    coroutineVersion = "0.22.1"
+    coroutineVersion = "0.22.5"
 }
 
 buildscript {
-    ext.kotlinVersion = '1.2.10'
-    ext.gradlePluginVersion = '3.0.0'
+    ext.kotlinVersion = '1.2.31'
+    ext.gradlePluginVersion = '3.1.0'
     repositories {
         jcenter()
         google()
