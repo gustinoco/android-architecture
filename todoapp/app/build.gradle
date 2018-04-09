@@ -110,7 +110,7 @@ dependencies {
     androidTestImplementation "android.arch.persistence.room:testing:$rootProject.roomVersion"
 
     // Other
-    implementation "com.google.code.findbugs:jsr305:2.0.1"
+    implementation "com.google.code.findbugs:jsr305:3.0.1"
 }
 kotlin {
     experimental {
