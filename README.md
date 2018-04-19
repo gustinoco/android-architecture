@@ -11,7 +11,7 @@ Before exploring this sample, you should familiarize yourself with the following
 
 * The [project README](https://github.com/googlesamples/android-architecture/tree/master)
 * The [todo-mvp](https://github.com/googlesamples/android-architecture/tree/todo-mvp) sample
-* The [todo-mvp-kotlin](https://github.com/googlesamples/android-architecture/tree/dev-todo-mvp-kotlin/) sample
+* The [todo-mvp-kotlin](https://github.com/googlesamples/android-architecture/tree/todo-mvp-kotlin/) sample
 * Kotlin [coroutine documentation](https://github.com/Kotlin/kotlinx.coroutines/blob/master/README.md#documentation)
 
 # Dependencies
